@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guía</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <header>
+        <h1>
+            Guía para la implementación de una solución con Strapi para proveer una
+            aplicación RestAPI
+        </h1>
+    </header>
+
+    <main>
+        <section id="servidor1">
+            <h2 class="titulo1">Servidor 1 - PostgreSQL</h2>
+            <div class="step">
+                <h3>Paso 1. Actualizar paquetes</h3>
+                <p>Comandos utilizados:</p>
+                <pre><code>sudo apt update</code><code>sudo apt upgrade -y</code></pre>
+            </div>
+            <div class="step">
+                <h3>Paso 2. Instalar PostgreSQL</h3>
+                <p>Comandos utilizados:</p>
+                <pre><code>sudo apt install postgresql postgresql-contrib -y</code></pre>
+            </div>
+            <div class="step">
+                <h3>Paso 3. Verificar si PostgreSQL está corriendo</h3>
+                <p>Comandos utilizados:</p>
+                <pre><code>sudo systemctl start postgresql</code>, <code>sudo systemctl enable postgresql</code></pre>
+                <img src="./img/imagen1.png" alt="" />
+            </div>
+            <div class="step">
+                <h3>Paso 4. Crear un usuario y una base de datos para STRAPI</h3>
+                <p>Comandos utilizados:</p>
+                <pre><code>sudo -i -u postgres</code></pre>
+                <pre><code>psql</code></pre>
+                <pre><code>CREATE USER strapiuser WITH PASSWORD '12345';</code></pre>
+                <pre><code>CREATE DATABASE strapidb;</code></pre>
+                <pre><code>GRANT ALL PRIVILEGES ON DATABASE strapidb TO strapiuser;</code></pre>
+                <img src="./img/imagen2.png" alt="" />
+            </div>
+            <div class="step">
+                <h3>Paso 5. Salir de la sesión de psql</h3>
+                <p>Comando utilizado: <code>\q</code>, <code>exit</code></p>
+            </div>
+            <div class="step">
+                <h3>
+                    Paso 6. Configuraciones para permitir la conexión con el servidor 2
+                    - STRAPI
+                </h3>
+                <p>Entrar al archivo <code>pg_hba.conf</code> para editarlo</p>
+                <pre><code>sudo nano /etc/postgresql/16/main/pg_hba.conf</code></pre>
+                <p>
+                    Agregar una línea como la siguiente:
+                    <code>host all all IP_servidor md5</code>
+                </p>
+                <img src="./img/imagen5.png" alt="" />
+            </div>
+            <div class="step">
+                <h3>Paso 7. Permitir conexiones remotas</h3>
+                <p>
+                    Entrar a editar el archivo <code>postgresql.conf</code> para
+                    permitir las conexiones remotas
+                </p>
+                <pre><code>sudo nano /etc/postgresql/16/main/postgresql.conf</code></pre>
+                <p>
+                    Descomentar y ajustar la línea <code>listen_addresses</code>:
+                    <code>listen_addresses='*'</code>
+                </p>
+                <img src="./img/imagen4.png" alt="" />
+            </div>
+            <div class="step">
+                <h3>Paso 8. Reiniciar PostgreSQL</h3>
+                <pre><code>sudo systemctl restart postgresql</code></pre>
+            </div>
+        </section>
+        <section id="servidor2">
+            <h2 class="titulo2">Servidor 2 - Strapi y Nginx como proxy inverso</h2>
+            <div class="step">
+                <h3>Paso 1. Actualizar paquetes</h3>
+                <p>Comandos utilizados:</p>
+                <pre><code>sudo apt update</code><code>sudo apt upgrade -y</code></pre>
+            </div>
+            <div class="step">
+                <h3>Paso 2. Instalar Node.js y npm</h3>
+                <pre><code>curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash</code></pre>
+                <pre><code>sudo apt-get install -y nodejs</code></pre>
+            </div>
+            <div class="step">
+                <h3>Paso 3. Instalar Strapi</h3>
+                <p>Comando utilizado:</p>
+                <pre><code>npm install -g strapi@latest</code></pre>
+            </div>
+            <div class="step">
+                <h3>Paso 4. Crear y configurar un nuevo proyecto Strapi</h3>
+                <p>Comandos utilizados:</p>
+                <pre><code>mkdir my-project</code><code>cd my-project</code><code>strapi new my-project</code></pre>
+                <img src="./img/imagen3.png" alt="" />
+                <p>
+                    Seleccionar PostgreSQL y proporcionar los detalles de conexión
+                    creados en el servidor 1
+                </p>
+            </div>
+            <div class="step">
+                <h3>
+                    Paso 5. Iniciar Strapi para verificar que todo está funcionando
+                    correctamente
+                </h3>
+                <pre><code>cd my-project</code> <code>npm run develop</code></pre>
+            </div>
+        </section>
+        <section id="servi2">
+            <h2 class="titu2">Servidor 2 - Servidor Web Nginx</h2>
+            <div class="step">
+                <h3>Paso 1. Generar el certificado SSL automatico</h3>
+                <img src="./img/imagen6.png" alt="" />
+                <p>Se tiene que crear la carpeta SSL en nginx</p>
+                <p>
+                    Recomendable llenar al menos el campo 'common name' con la IP del
+                    servidor
+                </p>
+                <img src="./img/imagen7.png" alt="" />
+            </div>
+            <div class="step">
+                <h3>Paso 2. Configuración del archivo default</h3>
+                <p>Se puede modificar el archivo default</p>
+                <p>
+                    Se tiene que agregar el certificado generado en nginx al navegador
+                    que se está utilizando
+                </p>
+                <p>Aqui se agrega la IP de strapi o del servidor</p>
+                <img src="./img/imagen8.png" alt="" />
+            </div>
+            <div class="step">
+                <h3>Paso 3. Strapi como servicio</h3>
+                <p>Crear un archivo systemctl para strapi</p>
+                <pre><code>sudo nano /etc/systemctl/system/strapi.service</code></pre>
+                <img src="./img/imagen9.png" alt="" />
+            </div>
+            <div class="step">
+                <h3>Paso 4. Configuración del servicio</h3>
+                <pre><code>sudo systemctl daemon-reload</code></pre>
+                <p>Recargar los archivos de servicio systemctl</p>
+            </div>
+            <div class="step">
+                <h3>Paso 5. Iniciar y habilitar el servicio strapi</h3>
+                <pre><code>sudo systemctl start strapi</code> <code>sudo systemctl enable strapi</code></pre>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Realizado por: Danna Carreño, Yolima Rozo, Hans Calderón</p>
+        <p>Fecha: 1 de julio de 2024</p>
+    </footer>
+</body>
+
+</html>
